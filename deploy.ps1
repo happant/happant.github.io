@@ -32,7 +32,7 @@ Write-Host "[3/4] 推送到 GitHub..." -ForegroundColor Yellow
 
 Write-Host "[4/4] 完成!" -ForegroundColor Green
 Write-Host ""
-Write-Host "访问地址: https://xinggege88.github.io/seat-query/" -ForegroundColor Cyan
+Write-Host "访问地址: https://happant.github.io/" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "提示: GitHub Pages 可能需要 1-2 分钟生效" -ForegroundColor DarkGray
 Read-Host "按回车退出"
