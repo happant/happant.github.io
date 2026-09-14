@@ -174,7 +174,8 @@
             pageElements = [];
 
             try {
-                const loadingTask = pdfjsLib.getDocument(PDF_FILE);
+                // 中文文件名必须用 encodeURI 编码，否则 PDF.js 内部 fetch 会失败
+                const loadingTask = pdfjsLib.getDocument(encodeURI(PDF_FILE));
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
 
