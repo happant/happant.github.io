@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>会务手册 / Conference Handbook</title>
+    <title>会议手册 / Conference Handbook</title>
     <!-- PDF.js -->
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <style>
@@ -120,16 +120,16 @@
     <!-- 加载状态 -->
     <div id="loadStatus" class="load-status">
         <div class="spinner"></div>
-        <div>正在加载会务手册...</div>
-        <div style="margin-top:6px;font-size:12px;opacity:0.7;">Loading handbook...</div>
+        <div id="loadingMain">正在加载会议手册...</div>
+        <div id="loadingSub" style="margin-top:6px;font-size:12px;opacity:0.7;">Loading conference handbook...</div>
     </div>
 
     <!-- 错误状态（初始隐藏） -->
     <div id="errorStatus" class="error-status" style="display:none;">
         <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
-        <div style="font-size:16px;font-weight:600;">手册加载失败</div>
+        <div id="errorTitle" style="font-size:16px;font-weight:600;">手册加载失败</div>
         <div id="errorMsg" style="margin-top:8px;font-size:12px;opacity:0.85;"></div>
-        <button class="retry-btn" onclick="loadPdf()">🔄 重新加载</button>
+        <button id="retryBtn" class="retry-btn" onclick="loadPdf()">🔄 重新加载</button>
     </div>
 
     <!-- PDF 连续滚动容器 -->
@@ -145,7 +145,40 @@
     </div>
 
     <script>
-        const PDF_FILE = '大会手册.pdf';
+        // 根据 URL 参数 ?lang=cn / ?lang=en 选择语言版本（默认中文）
+        const params = new URLSearchParams(window.location.search);
+        const lang = params.get('lang') === 'en' ? 'en' : 'cn';
+
+        const I18N = {
+            cn: {
+                pdf: '会议手册.pdf',
+                title: '会议手册 / Conference Handbook',
+                loadingMain: '正在加载会议手册...',
+                loadingSub: 'Loading conference handbook...',
+                loadFail: '手册加载失败',
+                retry: '🔄 重新加载',
+                hint: '（请检查网络连接，或稍后重试）'
+            },
+            en: {
+                pdf: 'Conference Guide.pdf',
+                title: 'Conference Guide / 会议手册',
+                loadingMain: 'Loading Conference Guide...',
+                loadingSub: '正在加载会议手册...',
+                loadFail: 'Failed to load the guide',
+                retry: '🔄 Retry',
+                hint: ' (Please check your network and try again)'
+            }
+        };
+        const T = I18N[lang];
+        const PDF_FILE = T.pdf;
+
+        // 应用双语文案
+        document.title = T.title;
+        document.getElementById('loadingMain').textContent = T.loadingMain;
+        document.getElementById('loadingSub').textContent = T.loadingSub;
+        document.getElementById('errorTitle').textContent = T.loadFail;
+        document.getElementById('retryBtn').textContent = T.retry;
+
         let pdfDoc = null;
         let totalPages = 0;
         let scale = 1.5;  // 适合手机屏幕的默认缩放
@@ -216,7 +249,7 @@
                 loadStatus.style.display = 'none';
                 errorStatus.style.display = 'flex';
                 document.getElementById('errorMsg').textContent =
-                    err.message + '（请确保 index.html 和 ' + PDF_FILE + ' 在同一目录，且通过 HTTP 服务器访问）';
+                    err.message + T.hint;
             }
         }
 
