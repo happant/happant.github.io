@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>会务手册 / Conference Handbook</title>
+    <!-- PDF.js -->
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 16px;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        /* 加载状态 */
+        .load-status {
+            text-align: center;
+            padding: 24px 16px;
+            color: #666;
+            font-size: 14px;
+        }
+        .spinner {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .retry-btn {
+            margin-top: 12px;
+            padding: 8px 20px;
+            background: #667eea;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .retry-btn:active {
+            background: #5568d3;
+        }
+        /* 工具栏 */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #f5f6fa;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-input {
+            width: 50px;
+            height: 32px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            outline: none;
+        }
+        .page-input:focus {
+            border-color: #667eea;
+        }
+        .nav-btn {
+            height: 32px;
+            padding: 0 12px;
+            background: #667eea;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .nav-btn:active {
+            background: #5568d3;
+        }
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .zoom-btns {
+            display: flex;
+            gap: 6px;
+        }
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .zoom-btn:active {
+            background: #5568d3;
+        }
+        /* PDF 渲染区 */
+        .pdf-viewer {
+            background: #e8e8e8;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            max-height: 65vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .pdf-viewer canvas {
+            display: block;
+            margin: 0 auto 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            max-width: 100%;
+        }
+        .data-info {
+            font-size: 12px;
+            color: #2e7d32;
+            text-align: right;
+            margin-top: 6px;
+        }
+        /* 下载区 */
+        .download-box {
+            text-align: center;
+            padding: 12px;
+        }
+        .download-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: transform 0.15s;
+        }
+        .download-btn:active {
+            transform: translateY(1px);
+        }
+        .download-tip {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        .footer .footer-tip {
+            margin-bottom: 4px;
+        }
+        .footer .footer-dev {
+            font-size: 11px;
+            opacity: 0.85;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            margin-top: 8px;
+        }
+        /* 动画 */
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📘 会务手册 / Conference Handbook</h1>
+            <p>在线查看或下载会议手册 / View or download the handbook</p>
+        </div>
+
+        <!-- 在线查看区 -->
+        <div class="card">
+            <div class="card-title">在线查看</div>
+
+            <!-- 加载状态 -->
+            <div id="loadStatus" class="load-status">
+                <div class="spinner"></div>
+                <div>正在加载手册...</div>
+            </div>
+
+            <!-- PDF 查看器（初始隐藏） -->
+            <div id="viewerArea" style="display:none;">
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <button class="nav-btn" id="prevPage">‹ 上一页</button>
+                        <input type="number" class="page-input" id="pageInput" value="1" min="1">
+                        <span style="color:#666;font-size:13px;">/ <span id="totalPages">--</span></span>
+                        <button class="nav-btn" id="nextPage">下一页 ›</button>
+                    </div>
+                    <div class="zoom-btns">
+                        <button class="zoom-btn" id="zoomOut">−</button>
+                        <button class="zoom-btn" id="zoomIn">+</button>
+                    </div>
+                </div>
+                <!-- 渲染容器 -->
+                <div class="pdf-viewer" id="pdfViewer">
+                    <canvas id="pdfCanvas"></canvas>
+                </div>
+                <div class="data-info" id="dataInfo"></div>
+            </div>
+        </div>
+
+        <!-- 下载区 -->
+        <div class="card">
+            <div class="card-title">下载手册</div>
+            <div class="download-box">
+                <a href="大会手册.pdf" download="大会手册.pdf" class="download-btn">⬇ 下载 PDF 完整版</a>
+                <div class="download-tip">建议在 Wi-Fi 环境下下载，文件较大</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-tip">数据实时读取 · 刷新页面更新 / Real-time data · Refresh to update</div>
+            <div class="footer-dev">技术支持：广州海洋地质调查局三亚南海地质研究所<br>Developed by：Sanya South China Sea Geological Research Institute, Guangzhou Marine Geological Survey</div>
+        </div>
+    </div>
+
+    <script>
+        const PDF_FILE = '大会手册.pdf';
+        let pdfDoc = null;
+        let currentPage = 1;
+        let totalPages = 0;
+        let scale = 1.2;
+
+        // 配置 PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+        // 加载 PDF
+        async function loadPdf() {
+            const loadStatus = document.getElementById('loadStatus');
+            const viewerArea = document.getElementById('viewerArea');
+
+            try {
+                const loadingTask = pdfjsLib.getDocument(PDF_FILE);
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+
+                // 加载成功
+                loadStatus.style.display = 'none';
+                viewerArea.style.display = 'block';
+                document.getElementById('totalPages').textContent = totalPages;
+                document.getElementById('pageInput').max = totalPages;
+                document.getElementById('dataInfo').textContent =
+                    '共 ' + totalPages + ' 页';
+
+                // 渲染第一页
+                currentPage = 1;
+                await renderPage();
+
+            } catch (err) {
+                console.error(err);
+                loadStatus.innerHTML = `
+                    <div style="font-size:36px;margin-bottom:8px;">⚠️</div>
+                    <div style="color:#c62828;">手册加载失败</div>
+                    <div style="margin-top:6px;color:#999;font-size:12px;">${err.message}</div>
+                    <div style="margin-top:6px;color:#999;font-size:12px;">请确保 index.html 和 ${PDF_FILE} 在同一目录，且通过 HTTP 服务器访问（不要用 file:// 直接打开）</div>
+                    <button class="retry-btn" onclick="loadPdf()">🔄 重新加载</button>
+                `;
+            }
+        }
+
+        // 渲染当前页
+        async function renderPage() {
+            if (!pdfDoc) return;
+
+            const canvas = document.getElementById('pdfCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const page = await pdfDoc.getPage(currentPage);
+            const viewport = page.getViewport({ scale: scale });
+
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({
+                canvasContext: ctx,
+                viewport: viewport
+            }).promise;
+
+            // 更新 UI
+            document.getElementById('pageInput').value = currentPage;
+            document.getElementById('prevPage').disabled = (currentPage <= 1);
+            document.getElementById('nextPage').disabled = (currentPage >= totalPages);
+
+            // 滚动到顶部
+            document.getElementById('pdfViewer').scrollTop = 0;
+        }
+
+        // 上一页
+        document.getElementById('prevPage').addEventListener('click', async () => {
+            if (currentPage > 1) {
+                currentPage--;
+                await renderPage();
+            }
+        });
+
+        // 下一页
+        document.getElementById('nextPage').addEventListener('click', async () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                await renderPage();
+            }
+        });
+
+        // 跳页
+        document.getElementById('pageInput').addEventListener('change', async (e) => {
+            const n = parseInt(e.target.value);
+            if (n >= 1 && n <= totalPages) {
+                currentPage = n;
+                await renderPage();
+            } else {
+                e.target.value = currentPage;
+            }
+        });
+
+        // 缩放
+        document.getElementById('zoomIn').addEventListener('click', async () => {
+            scale = Math.min(scale + 0.2, 3.0);
+            await renderPage();
+        });
+        document.getElementById('zoomOut').addEventListener('click', async () => {
+            scale = Math.max(scale - 0.2, 0.5);
+            await renderPage();
+        });
+
+        // 启动
+        loadPdf();
+    </script>
+</body>
+</html>
